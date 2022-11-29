@@ -2,7 +2,7 @@ const fs = require("fs");
 
 class ProductManager {
   constructor(fileName) {
-    this.fileName = fileName;
+    this.path = fileName;
     this.format = "utf-8";
   }
 
@@ -36,7 +36,7 @@ class ProductManager {
         return products;
       })
       .then((productNew) =>
-        fs.promises.writeFile(this.fileName, JSON.stringify(productNew))
+        fs.promises.writeFile(this.path, JSON.stringify(productNew))
       );
   };
 
@@ -50,7 +50,7 @@ class ProductManager {
   };
 
   getProduct = async () => {
-    const product = fs.promises.readFile(this.fileName, this.format);
+    const product = fs.promises.readFile(this.path, this.format);
     return product
       .then((content) => JSON.parse(content))
       .catch((e) => {
@@ -65,7 +65,7 @@ class ProductManager {
     if(deleted) {
         const index = data.indexOf(deleted)
         data.splice(index, 1);
-        await fs.promises.writeFile(this.fileName, JSON.stringify(data))
+        await fs.promises.writeFile(this.path, JSON.stringify(data))
         console.log(`El producto ID: ${id} fue eliminado.`);
     }
     else {
@@ -80,8 +80,10 @@ class ProductManager {
     updated['title'] = 'El producto fue actualizado.';
     updated['stock'] = 'Ya no contamos con stock de este producto.'
 
-    fs.writeFileSync(this.fileName, JSON.stringify(data))
+    fs.writeFileSync(this.path, JSON.stringify(data))
   }
+
+
 
 }
 
@@ -109,7 +111,8 @@ async function run() {
     //Se llama al método getProductById y se devuelve el producto con el id especificado, si no existe arroja error.
 
     console.log('Seleccionamos el siguiente producto:');
-    console.log(await manager.getProductById(5));
+    console.log(await manager.getProductById(3));
+
 
 
 
