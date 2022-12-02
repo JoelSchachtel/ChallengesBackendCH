@@ -1,123 +1,93 @@
-const fs = require("fs");
+const { log } = require('console')
+const fs = require('fs')
 
 class ProductManager {
-  constructor(fileName) {
-    this.path = fileName;
-    this.format = "utf-8";
-  }
+    constructor(path){
+        this.path = path
+        this.format = 'utf-8'
+    }
 
-  generateId = async () => {
-    const data = await this.getProduct();
-    const count = data.length;
+     getId = async () => {
+        const data = await this.getProduct()
+        const count = data.length
 
-    if (count == 0) return 1;
+        if (count == 0) return 1;
 
-    const lastProduct = data[count - 1];
-    const lastID = lastProduct.id;
-    const nextID = lastID + 1;
+        const lastProduct = data[count - 1]
+        const lastID = lastProduct.id
+        const nextID = lastID + 1
 
-    return nextID;
-  };
+        return nextID
+    }
 
-  addProduct = async (title, description, price, thumbnail, stock, code) => {
-    const id = await this.generateId();
 
-    return this.getProduct()
-      .then((products) => {
-        products.push({
-          id,
-          title,
-          description,
-          price,
-          thumbnail,
-          stock,
-          code,
-        });
-        return products;
-      })
-      .then((productNew) =>
-        fs.promises.writeFile(this.path, JSON.stringify(productNew))
-      );
-  };
+    addProduct = async (title, description, price, thumbnail, stock, code) => {
+        const id = await this.getId()
 
-  getProductById = async (id) => {
-    const data = await this.getProduct();
-    const productFound = data.find((product) => product.id === id);
-    return (
-      productFound ||
-      console.log(`¡ERROR! El producto de con ID: ${id} no existe.`)
-    );
-  };
+        return this.getProduct()
+            .then(products => {
+                products.push({id, title, description, price, thumbnail, stock, code})
+                return products
+            })
+            .then(productsNew => fs.promises.writeFile(this.path, JSON.stringify(productsNew)))
+}
 
-  getProduct = async () => {
-    const product = fs.promises.readFile(this.path, this.format);
-    return product
-      .then((content) => JSON.parse(content))
-      .catch((e) => {
-        if (e) return [];
-      });
-  };
+    getProductById = async (id) => {
+        const data = await this.getProduct()
+        const productFound = data.find(product => product.id === id)
+        return productFound || console.log(`ERROR: EL PRODUCTO CON EL ID "${id}" NO EXISTE.`);
+    }
 
-  deleteProduct = async (id) => {
-    const data = await this.getProduct();
-    const deleted = data.find(product => product.id === id);
+    getProduct = async () => {
+        const product = fs.promises.readFile(this.path, this.format)
+        return product
+            .then(content => JSON.parse(content))
+            .catch(e => {if(e) return []})
+    }
 
-    if(deleted) {
-        const index = data.indexOf(deleted)
-        data.splice(index, 1);
+    deleteProduct = async (id) => {
+        const data = await this.getProduct()
+        const toBeDeleted = data.find(product => product.id === id)
+
+        if(toBeDeleted){
+            const index = data.indexOf(toBeDeleted)
+            data.splice(index, 1);
+            await fs.promises.writeFile(this.path, JSON.stringify(data))
+            console.log(`\nPRODUCTO ELIMINADO: ID "${id}".`);
+        } else {
+            console.log(`\n\nERROR AL ELIMINAR PRODUCTO: EL PRODUCTO CON EL ID "${id}" NO SE ENCUENTRA EN LA LISTA.`);
+        }
+    }
+
+    updateProduct = async (id, field, newValue) => {
+        const data = await this.getProduct()
+        const toBeUpdated = data.find(product => product.id === id)
+
+        toBeUpdated[field] = newValue;
+        
         await fs.promises.writeFile(this.path, JSON.stringify(data))
-        console.log(`El producto ID: ${id} fue eliminado.`);
     }
-    else {
-        console.log(`No se pudo eliminar el producto con ID: ${id}`);
-    }
-  }
-
-  updateProduct = async (id) => {
-    const data = await this.getProduct();
-    const updated = data.find(product = product.id === id);
-
-    updated['title'] = 'El producto fue actualizado.';
-    updated['stock'] = 'Ya no contamos con stock de este producto.'
-
-    fs.writeFileSync(this.path, JSON.stringify(data))
-  }
-
-
-
 }
 
 
-async function run() {
+
+async function run(){
     const manager = new ProductManager('./Desafío 2/fs/products.json')
 
-    // await manager.addProduct('Producto 1', 'Producto de prueba 1', 1500, 'Sin imágen cargada', 10, 'abc123');
-    // await manager.addProduct('Producto 2', 'Producto de prueba 2', 2750, 'Sin imágen cargada.', 5, 'ABC124');
+    // Realizando el Testing
 
-    // await manager.deleteProduct(1)
-
-    // await manager.updateProduct(1)
-
-    console.log('Los productos agregados son:');
+    //Se llama al método getProduct y se agrega el objeto conel ID generado aleatoriamente y no se repite
+    await manager.addProduct('Producto prueba', 'Este es un producto de prueba', 200, 'Sin imágen', 25, 'abc123')
+    console.log('El objeto fue agregado satisfactoriamente. Se ha generado el id aleatoriamente.')
+    //Se llama al método getProducts
     console.log(await manager.getProduct());
-
-    // REALIZANDO EL TESTING
-    // Se llama al método addProduct y se agrega el objeto con ID aleatorio generado automáticamente que no se repite.
-
-    // await manager.addProduct('Producto prueba', 'Este es un producto de prueba', 200, 'Sin imágen', 25, 'abc123')
-
-    // Se llama al método getProducts y aparece en lista el producto agregado
-
-    //Se llama al método getProductById y se devuelve el producto con el id especificado, si no existe arroja error.
-
-    console.log('Seleccionamos el siguiente producto:');
-    console.log(await manager.getProductById(3));
-
-
-
-
-
-
+    //Se llama al método getProductById
+    console.log(await manager.getProductById(1))
+    //Se llama al método updateProduct
+    await manager.updateProduct(1, "title", "PRODUCTO ACTUALIZADO")
+    await manager.updateProduct(1, "stock", 150)
+    //Se llama al método deleteProduct
+    await manager.deleteProduct(2)
 }
 
 run()
