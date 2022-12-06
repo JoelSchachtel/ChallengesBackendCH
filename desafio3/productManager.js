@@ -71,7 +71,7 @@ class ProductManager {
 
 
 async function run(){
-    const manager = new ProductManager('./Desafío 2/fs/products.json')
+    const manager = new ProductManager('./fs/products.json')
 
     // Realizando el Testing
 
